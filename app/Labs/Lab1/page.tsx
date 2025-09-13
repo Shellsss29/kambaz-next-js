@@ -3,6 +3,11 @@
 export default function Lab1() {
     return (
     <div id="wd-lab1">
+        <header>
+                <h3>Student: Shailly Bhati</h3>
+                <a href="https://github.com/Shellsss29/kambaz-next-js" id="wd-github" target="_blank">Click here to access Github Repository</a>
+                <hr />
+        </header>
         <h1>Lab 1</h1>
         <h3>HTML Examples</h3>
         <div id="wd-h-tag">
@@ -47,8 +52,14 @@ export default function Lab1() {
             My favorite recipe:
             {/*ADD YOUR OWN RECIPE. ONE STEP INSIDE ONE <li> tag */}
             <ol id="wd-your-favorite-recipe">
-                <li>Step 1</li>
-                <li>Step 2</li>
+                <li>Whisk together eggs, milk, cinnamon, and vanilla in a bowl.</li>
+                <li>Dip slices of bread into the mixture, coating both sides.</li>
+                <li>Heat a lightly greased skillet or griddle over medium heat.</li>
+                <li>Place coated bread slices on the skillet.</li>
+                <li>Cook until golden brown on one side.</li>
+                <li>Flip and cook the other side until golden and cooked through.</li>
+                <li>Remove from skillet and place on a plate.</li>
+                <li>Serve warm with syrup, powdered sugar, or fresh fruit.</li>
             </ol>
             <h5>Unordered List Tag</h5>
             My favorite books (in no particular order)
@@ -62,8 +73,11 @@ export default function Lab1() {
             Your favorite books (in no particular order)
             <ul id="wd-your-books">
             {/* complete on your own */}
-                <li>Book 1</li>
-                <li>Bok 2</li>
+                    <li>The Great Gatsby</li>
+                    <li>To Kill a Mockingbird</li>
+                    <li>1984</li>
+                    <li>Pride and Prejudice</li>
+                    <li>The Catcher in the Rye</li>
             </ul>
         </div>
 
@@ -97,8 +111,50 @@ export default function Lab1() {
                         <td>2/10/21</td>
                         <td>80</td>
                     </tr>
-                    <tr> ... </tr>
+                    <tr>
+                        <td>Q4</td>
+                        <td>TS</td>
+                        <td>2/14/21</td>
+                        <td>85</td>
+                    </tr>
+                    <tr>
+                        <td>Q5</td>
+                        <td>Bootstrap</td>
+                        <td>2/17/21</td>
+                        <td>88</td>
+                    </tr>
+                    <tr>
+                        <td>Q6</td>
+                        <td>DOM</td>
+                        <td>2/24/21</td>
+                        <td>92</td>
+                    </tr>
+                    <tr>
+                        <td>Q7</td>
+                        <td>jQuery</td>
+                        <td>3/3/21</td>
+                        <td>85</td>
+                    </tr>
+                    <tr>
+                        <td>Q8</td>
+                        <td>Node.js</td>
+                        <td>3/10/21</td>
+                        <td>89</td>
+                    </tr>
+                    <tr>
+                        <td>Q9</td>
+                        <td>Express</td>
+                        <td>3/12/21</td>
+                        <td>91</td>
+                    </tr>
+                    <tr>
+                        <td>Q10</td>
+                        <td>React</td>
+                        <td>3/15/21</td>
+                        <td>95</td>
+                    </tr>
                 </tbody>
+
                 <tfoot>
                     <tr>
                         <td colSpan={3}>Average</td>
@@ -242,6 +298,6 @@ export default function Lab1() {
         <a href="https://www.lipsum.com" id="wd-lipsum">click here</a>
         to get dummy text<br/>
 
-        <a href="" id="wd-github">Click here to access Github Repository</a>
+        <a href="https://github.com/Shellsss29/kambaz-next-js" id="wd-github">Click here to access Github Repository</a>
     </div>
 );}
