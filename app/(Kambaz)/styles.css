@@ -1,17 +1,16 @@
 body {
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  padding: 0;
 }
 
 body * {
-    font-family: Arial,
-        Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 @media (min-width: 768px) {
-    #wd-kambaz .wd-main-content-offset {
-        padding-left: 140px !important;
-    }
+  #wd-kambaz .wd-main-content-offset {
+    padding-left: 140px !important;
+  }
 }
 
 #wd-dashboard,
@@ -19,46 +18,58 @@ body * {
 #wd-signin-screen,
 #wd-signup-screen,
 #wd-profile-screen {
-    margin-left: 120px;
-    padding: 20px;
+  margin-left: 120px;
+  padding: 20px;
 }
 
 @media (max-width: 425) {
-    #wd-kambaz-navigation,
-    #wd-courses-navigation {
-        display: none;
-    }
+  #wd-kambaz-navigation,
+  #wd-courses-navigation {
+    display: none;
+  }
 
-    #wd-dashboard,
-    #wd-courses-navigation,
-    #wd-signin-screen,
-    #wd-signup-screen,
-    #wd-profile-screen {
-        margin-left: 0px;
-    }
+  #wd-dashboard,
+  #wd-courses-navigation,
+  #wd-signin-screen,
+  #wd-signup-screen,
+  #wd-profile-screen {
+    margin-left: 0px;
+  }
 }
 
-.list-group.wd>.list-group-item.active {
-    color: black;
-    background-color: white;
-    border-left: 3px solid black !important;
+.list-group.wd > .list-group-item.active {
+  color: black;
+  background-color: white;
+  border-left: 3px solid black !important;
 }
 
 .btn-secondary {
-    --bs-btn-color: #000 !important;
-    --bs-btn-bg: #c7cdd1 !important;
-    --bs-btn-border-color: #c7cdd1 !important;
-    --bs-btn-hover-color: #fff !important;
+  --bs-btn-color: #000 !important;
+  --bs-btn-bg: #c7cdd1 !important;
+  --bs-btn-border-color: #c7cdd1 !important;
+  --bs-btn-hover-color: #fff !important;
 }
 
 .bg-secondary {
-    --bs-secondary-rgb: 199, 205, 209;
+  --bs-secondary-rgb: 199, 205, 209;
 }
 
 .list-group-item {
-    --bs-list-group-border-color: gray;
+  --bs-list-group-border-color: gray;
 }
 
 .wd-lesson {
-    border-left: 3px solid green !important;
+  border-left: 3px solid green !important;
+}
+
+#wd-assignment-editor label {
+  font-size: 0.95rem;
+}
+
+#wd-assignment-editor .form-control {
+  border-radius: 6px;
+}
+
+#wd-assignment-editor h5 {
+  margin-top: 30px;
 }
