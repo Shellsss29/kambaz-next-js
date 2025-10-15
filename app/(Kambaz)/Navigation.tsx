@@ -5,7 +5,9 @@ import { LiaBookSolid, LiaCogSolid } from "react-icons/lia";
 import { FaInbox, FaRegCircleUser } from "react-icons/fa6";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image"; // ✅ Import Image from next/image
 import { ListGroup, ListGroupItem } from "react-bootstrap";
+
 export default function KambazNavigation() {
   const pathname = usePathname();
   const links = [
@@ -15,6 +17,7 @@ export default function KambazNavigation() {
     { label: "Inbox", path: "/Inbox", icon: FaInbox },
     { label: "Labs", path: "/Labs", icon: LiaCogSolid },
   ];
+
   return (
     <ListGroup
       id="wd-kambaz-navigation"
@@ -28,17 +31,25 @@ export default function KambazNavigation() {
         action
         className="bg-black border-0 text-center"
       >
-        <img src="/images/NEU.svg" width="75px" />
+        {/* ✅ Use next/image with alt text */}
+        <Image
+          src="/images/NEU.svg"
+          alt="Northeastern University logo"
+          width={75}
+          height={75}
+          priority
+        />
       </ListGroupItem>
+
       <ListGroupItem
         as={Link}
         href="/Account"
         className={`text-center border-0 bg-black
-            ${
-              pathname.includes("Account")
-                ? "bg-white text-danger"
-                : "bg-black text-white"
-            }`}
+          ${
+            pathname.includes("Account")
+              ? "bg-white text-danger"
+              : "bg-black text-white"
+          }`}
       >
         <FaRegCircleUser
           className={`fs-1 ${
@@ -48,17 +59,18 @@ export default function KambazNavigation() {
         <br />
         Account
       </ListGroupItem>
+
       {links.map((link) => (
         <ListGroupItem
           key={link.path}
           as={Link}
           href={link.path}
           className={`bg-black text-center border-0
-              ${
-                pathname.includes(link.label)
-                  ? "text-danger bg-white"
-                  : "text-white bg-black"
-              }`}
+            ${
+              pathname.includes(link.label)
+                ? "text-danger bg-white"
+                : "text-white bg-black"
+            }`}
         >
           {link.icon({ className: "fs-1 text-danger" })}
           <br />
