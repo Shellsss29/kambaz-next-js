@@ -22,7 +22,7 @@ body * {
   padding: 20px;
 }
 
-@media (max-width: 425) {
+@media (max-width: 425px) {
   #wd-kambaz-navigation,
   #wd-courses-navigation {
     display: none;
@@ -34,6 +34,7 @@ body * {
   #wd-signup-screen,
   #wd-profile-screen {
     margin-left: 0px;
+    padding: 10px;
   }
 }
 
