@@ -1,11 +1,12 @@
 "use client";
+
 import { AiOutlineDashboard } from "react-icons/ai";
 import { IoCalendarOutline } from "react-icons/io5";
 import { LiaBookSolid, LiaCogSolid } from "react-icons/lia";
 import { FaInbox, FaRegCircleUser } from "react-icons/fa6";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image"; // ✅ Import Image from next/image
+import Image from "next/image";
 import { ListGroup, ListGroupItem } from "react-bootstrap";
 
 export default function KambazNavigation() {
@@ -31,7 +32,6 @@ export default function KambazNavigation() {
         action
         className="bg-black border-0 text-center"
       >
-        {/* ✅ Use next/image with alt text */}
         <Image
           src="/images/NEU.svg"
           alt="Northeastern University logo"
@@ -41,40 +41,46 @@ export default function KambazNavigation() {
         />
       </ListGroupItem>
 
-      <ListGroupItem
-        as={Link}
-        href="/Account"
-        className={`text-center border-0 bg-black
-          ${
+      <ListGroupItem className="text-center border-0 bg-black">
+        <Link
+          href="/Account"
+          className={`d-block text-decoration-none ${
             pathname.includes("Account")
               ? "bg-white text-danger"
               : "bg-black text-white"
           }`}
-      >
-        <FaRegCircleUser
-          className={`fs-1 ${
-            pathname.includes("Account") ? "text-danger" : "text-white"
-          }`}
-        />
-        <br />
-        Account
+        >
+          <FaRegCircleUser
+            className={`fs-1 ${
+              pathname.includes("Account") ? "text-danger" : "text-white"
+            }`}
+          />
+          <br />
+          Account
+        </Link>
       </ListGroupItem>
 
       {links.map((link) => (
         <ListGroupItem
           key={link.path}
-          as={Link}
-          href={link.path}
-          className={`bg-black text-center border-0
-            ${
+          className="text-center border-0 bg-black"
+        >
+          <Link
+            href={link.path}
+            className={`d-block text-decoration-none py-2 ${
               pathname.includes(link.label)
                 ? "text-danger bg-white"
                 : "text-white bg-black"
             }`}
-        >
-          {link.icon({ className: "fs-1 text-danger" })}
-          <br />
-          {link.label}
+          >
+            <link.icon
+              className={`fs-1 ${
+                pathname.includes(link.label) ? "text-danger" : "text-white"
+              }`}
+            />
+            <br />
+            {link.label}
+          </Link>
         </ListGroupItem>
       ))}
     </ListGroup>

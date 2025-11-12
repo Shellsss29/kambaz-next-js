@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 export default function CourseNavigation() {
   const pathname = usePathname();
   const segments = pathname.split("/");
-  const cid = segments[2]; // e.g., /Courses/1234/Modules → "1234"
+  const cid = segments[2];
 
   const links = [
     "Home",
@@ -21,13 +21,10 @@ export default function CourseNavigation() {
   return (
     <div id="wd-courses-navigation" className="list-group fs-5 rounded-0">
       {links.map((link) => {
-        // 👇 If "People", route goes to /People/Table
         const href =
           link === "People"
             ? `/Courses/${cid}/People/Table`
             : `/Courses/${cid}/${link}`;
-
-        // ✅ Active state should also match nested paths
         const isActive =
           pathname.includes(`/${link}`) ||
           (link === "People" && pathname.includes("/People/Table"));
