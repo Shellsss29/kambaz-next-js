@@ -1,53 +1,30 @@
 "use client";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { useDispatch } from "react-redux";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import { FormControl, Button } from "react-bootstrap";
+import Link from "next/link";
 import { setCurrentUser } from "../reducer";
-import * as db from "../../Database";
+import * as client from "../client";
 import type { AppDispatch } from "../../store";
 
-interface User {
-  _id: string;
-  username: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  dob: string;
-  role: "FACULTY" | "STUDENT" | "TA" | "ADMIN";
-  loginId: string;
-  section: string;
-  lastActivity: string;
-  totalActivity: string;
-}
-
-interface Credentials {
-  username: string;
-  password: string;
-}
-
 export default function Signin() {
-  const [credentials, setCredentials] = useState<Credentials>({
+  const [credentials, setCredentials] = useState({
     username: "",
     password: "",
   });
-
   const dispatch = useDispatch<AppDispatch>();
-
-  const signin = () => {
-    const users = db.users as User[];
-
-    const user = users.find(
-      (u) =>
-        u.username === credentials.username &&
-        u.password === credentials.password
-    );
-
-    if (!user) return;
-    dispatch(setCurrentUser(user));
-    redirect("/Dashboard");
+  const router = useRouter();
+  const signin = async () => {
+    try {
+      const user = await client.signin(credentials);
+      if (!user) return;
+      dispatch(setCurrentUser(user));
+      router.push("/Dashboard");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      alert(axiosErr.response?.data?.message || "Invalid credentials");
+    }
   };
 
   return (

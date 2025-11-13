@@ -1,11 +1,8 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useSelector, useDispatch } from "react-redux";
-import { addAssignment, updateAssignment } from "../reducer";
 import { Form, Button, Row, Col } from "react-bootstrap";
-import type { RootState, AppDispatch } from "../../../../store";
+import * as client from "../../../client";
 
 interface Assignment {
   _id?: string;
@@ -21,52 +18,52 @@ interface Assignment {
 export default function AssignmentEditor() {
   const { cid } = useParams();
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
   const searchParams = useSearchParams();
   const editId = searchParams.get("id");
 
-  const { assignments } = useSelector(
-    (state: RootState) => state.assignmentsReducer
-  );
-
-  const existingAssignment = assignments.find(
-    (a: Assignment) => a._id === editId
-  );
-
-  const [assignment, setAssignment] = useState<Assignment>(
-    existingAssignment || {
-      title: "",
-      course: cid,
-      description: "",
-      points: 100,
-      dueDate: "",
-      availableFrom: "",
-      availableUntil: "",
-    }
-  );
+  const [assignment, setAssignment] = useState<Assignment>({
+    title: "",
+    course: cid,
+    description: "",
+    points: 100,
+    dueDate: "",
+    availableFrom: "",
+    availableUntil: "",
+  });
 
   useEffect(() => {
-    if (existingAssignment) setAssignment(existingAssignment);
-  }, [existingAssignment]);
+    const fetchExisting = async () => {
+      if (editId) {
+        const assignments = await client.findAssignmentsForCourse(
+          cid as string
+        );
+        const existing = assignments.find((a: Assignment) => a._id === editId);
+        if (existing) setAssignment(existing);
+      }
+    };
+    fetchExisting();
+  }, [cid, editId]);
 
   const handleChange = <K extends keyof Assignment>(
     field: K,
     value: Assignment[K]
-  ) => {
-    setAssignment({ ...assignment, [field]: value });
-  };
+  ) => setAssignment({ ...assignment, [field]: value });
 
-  const handleSave = () => {
-    if (editId) {
-      dispatch(updateAssignment(assignment));
-    } else {
-      dispatch(addAssignment(assignment));
+  const handleSave = async () => {
+    try {
+      if (editId) {
+        await client.updateAssignment({
+          ...assignment,
+          course: String(assignment.course),
+        });
+      } else {
+        const normalized = { ...assignment, course: String(assignment.course) };
+        await client.createAssignmentForCourse(String(cid), normalized);
+      }
+      router.push(`/Courses/${cid}/Assignments`);
+    } catch (err) {
+      console.error("Error saving assignment:", err);
     }
-    router.push(`/Courses/${cid}/Assignments`);
-  };
-
-  const handleCancel = () => {
-    router.push(`/Courses/${cid}/Assignments`);
   };
 
   return (
@@ -156,17 +153,11 @@ export default function AssignmentEditor() {
         <Button
           variant="secondary"
           className="me-2 px-4"
-          style={{ borderRadius: "6px" }}
-          onClick={handleCancel}
+          onClick={() => router.push(`/Courses/${cid}/Assignments`)}
         >
           Cancel
         </Button>
-        <Button
-          variant="danger"
-          className="px-4"
-          style={{ borderRadius: "6px", backgroundColor: "#d32f2f" }}
-          onClick={handleSave}
-        >
+        <Button variant="danger" className="px-4" onClick={handleSave}>
           Save
         </Button>
       </div>

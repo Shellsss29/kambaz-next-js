@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useSelector, useDispatch } from "react-redux";
+import { useState, useEffect } from "react";
 import {
   BsGripVertical,
   BsThreeDotsVertical,
@@ -10,29 +10,48 @@ import {
   BsTrash,
 } from "react-icons/bs";
 import { FaCheckCircle } from "react-icons/fa";
-import type { RootState, AppDispatch } from "../../../store";
-import { deleteAssignment } from "./reducer";
-import { useState } from "react";
+import * as client from "../../client";
+
+interface Assignment {
+  _id?: string;
+  title: string;
+  course: string;
+  description?: string;
+  points?: number;
+  dueDate?: string;
+  availableFrom?: string;
+  availableUntil?: string;
+}
 
 export default function Assignments() {
   const { cid } = useParams();
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
-  const { assignments } = useSelector(
-    (state: RootState) => state.assignmentsReducer
-  );
-
-  const courseAssignments = assignments.filter((a) => a.course === cid);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
 
-  const handleDelete = (id: string) => {
-    setShowConfirm(id);
-  };
+  useEffect(() => {
+    const loadAssignments = async () => {
+      try {
+        const data = await client.findAssignmentsForCourse(cid as string);
+        setAssignments(data);
+      } catch (err) {
+        console.error("Error fetching assignments:", err);
+      }
+    };
+    loadAssignments();
+  }, [cid]);
 
-  const confirmDelete = () => {
+  const handleDelete = (id: string) => setShowConfirm(id);
+
+  const confirmDelete = async () => {
     if (showConfirm) {
-      dispatch(deleteAssignment(showConfirm));
-      setShowConfirm(null);
+      try {
+        await client.deleteAssignment(showConfirm);
+        setAssignments(assignments.filter((a) => a._id !== showConfirm));
+        setShowConfirm(null);
+      } catch (err) {
+        console.error("Error deleting assignment:", err);
+      }
     }
   };
 
@@ -82,7 +101,7 @@ export default function Assignments() {
       </h5>
 
       <ul id="wd-assignment-list" className="list-group rounded-0">
-        {courseAssignments.map((a) => (
+        {assignments.map((a) => (
           <li
             key={a._id}
             className="wd-assignment-list-item list-group-item p-3 border-start border-success border-4"
@@ -115,7 +134,7 @@ export default function Assignments() {
         ))}
       </ul>
 
-      {courseAssignments.length === 0 && (
+      {assignments.length === 0 && (
         <p className="text-muted mt-3">No assignments found for this course.</p>
       )}
 

@@ -5,55 +5,90 @@ import { FormControl, ListGroup, ListGroupItem } from "react-bootstrap";
 import { FaTrash } from "react-icons/fa6";
 import { FaPlusCircle } from "react-icons/fa";
 import { FaPencil } from "react-icons/fa6";
+import type { AxiosError } from "axios";
+
+export interface Todo {
+  id: string | number;
+  title: string;
+  completed: boolean;
+  editing?: boolean;
+}
+
+const isAxiosError = (
+  error: unknown
+): error is AxiosError<{ message?: string }> => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "isAxiosError" in error &&
+    Boolean((error as AxiosError).isAxiosError)
+  );
+};
+
 export default function WorkingWithArraysAsynchronously() {
-  const [todos, setTodos] = useState<any[]>([]);
-  const editTodo = (todo: any) => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const editTodo = (todo: Todo) => {
     const updatedTodos = todos.map((t) =>
       t.id === todo.id ? { ...todo, editing: true } : t
     );
     setTodos(updatedTodos);
   };
-  const [errorMessage, setErrorMessage] = useState(null);
-  const updateTodo = async (todo: any) => {
+
+  const updateTodo = async (todo: Todo) => {
     try {
       await client.updateTodo(todo);
       setTodos(todos.map((t) => (t.id === todo.id ? todo : t)));
-    } catch (error: any) {
-      setErrorMessage(error.response.data.message);
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        setErrorMessage(error.response?.data?.message ?? "Update failed");
+      } else {
+        setErrorMessage("Unexpected error while updating todo");
+      }
     }
   };
+
   const createNewTodo = async () => {
-    const todos = await client.createNewTodo();
-    setTodos(todos);
+    const newTodos = await client.createNewTodo();
+    setTodos(newTodos);
   };
+
   const fetchTodos = async () => {
-    const todos = await client.fetchTodos();
-    setTodos(todos);
+    const newTodos = await client.fetchTodos();
+    setTodos(newTodos);
   };
-  const removeTodo = async (todo: any) => {
+
+  const removeTodo = async (todo: Todo) => {
     const updatedTodos = await client.removeTodo(todo);
     setTodos(updatedTodos);
   };
-  const deleteTodo = async (todo: any) => {
+
+  const deleteTodo = async (todo: Todo) => {
     try {
       await client.deleteTodo(todo);
       const newTodos = todos.filter((t) => t.id !== todo.id);
       setTodos(newTodos);
-    } catch (error: any) {
-      console.log(error);
-      setErrorMessage(error.response.data.message);
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        setErrorMessage(error.response?.data?.message ?? "Delete failed");
+      } else {
+        setErrorMessage("Unexpected error while deleting todo");
+      }
     }
   };
-  useEffect(() => {
-    fetchTodos();
-  }, []);
+
   const postNewTodo = async () => {
-    const newTodo = await client.postNewTodo({
+    const newTodo: Todo = await client.postNewTodo({
       title: "New Posted Todo",
       completed: false,
     });
     setTodos([...todos, newTodo]);
   };
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
 
   return (
     <div id="wd-asynchronous-arrays">
@@ -125,7 +160,7 @@ export default function WorkingWithArraysAsynchronously() {
             )}
           </ListGroupItem>
         ))}
-      </ListGroup>{" "}
+      </ListGroup>
       <hr />
     </div>
   );

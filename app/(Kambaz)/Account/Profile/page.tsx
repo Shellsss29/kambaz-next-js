@@ -1,19 +1,22 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import { Button, Form, Container, Row, Col } from "react-bootstrap";
 import { setCurrentUser } from "../reducer";
+import * as client from "../client";
 import type { RootState, AppDispatch } from "../../store";
 
 interface UserProfile {
+  _id?: string;
   username: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  dob: string;
-  email: string;
-  role: "USER" | "ADMIN" | "FACULTY" | "STUDENT";
+  firstName?: string;
+  lastName?: string;
+  dob?: string;
+  email?: string;
+  role?: "USER" | "ADMIN" | "FACULTY" | "STUDENT";
+  [key: string]: unknown; // 👈 add this line
 }
 
 export default function Profile() {
@@ -22,25 +25,38 @@ export default function Profile() {
   const { currentUser } = useSelector(
     (state: RootState) => state.accountReducer
   );
-
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  const fetchProfile = useCallback(() => {
-    if (!currentUser) {
+  const fetchProfile = useCallback(async () => {
+    try {
+      const serverUser = await client.profile();
+      if (!serverUser) {
+        router.push("/Account/Signin");
+        return;
+      }
+      dispatch(setCurrentUser(serverUser));
+      setProfile(serverUser);
+    } catch (e) {
       router.push("/Account/Signin");
-      return;
     }
-    setProfile(currentUser);
-  }, [currentUser, router]);
-
-  const signout = () => {
-    dispatch(setCurrentUser(null));
-    router.push("/Account/Signin");
-  };
+  }, [dispatch, router]);
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  const updateProfile = async () => {
+    if (!profile || !profile._id) return;
+    const updated = await client.updateUser(profile);
+    dispatch(setCurrentUser(updated));
+    alert("Profile updated successfully!");
+  };
+
+  const signout = async () => {
+    await client.signout();
+    dispatch(setCurrentUser(null));
+    router.push("/Account/Signin");
+  };
 
   if (!profile) return null;
 
@@ -48,11 +64,7 @@ export default function Profile() {
     <Container
       id="wd-profile-screen"
       className="p-4"
-      style={{
-        paddingLeft: "150px",
-        paddingTop: "30px",
-        maxWidth: "800px",
-      }}
+      style={{ paddingLeft: "150px", paddingTop: "30px", maxWidth: "800px" }}
     >
       <h3 className="text-danger mb-4 fw-bold">Profile</h3>
 
@@ -83,7 +95,7 @@ export default function Profile() {
             <Form.Group className="mb-3">
               <Form.Label>First Name</Form.Label>
               <Form.Control
-                value={profile.firstName}
+                value={profile.firstName || ""}
                 onChange={(e) =>
                   setProfile({ ...profile, firstName: e.target.value })
                 }
@@ -94,7 +106,7 @@ export default function Profile() {
             <Form.Group className="mb-3">
               <Form.Label>Last Name</Form.Label>
               <Form.Control
-                value={profile.lastName}
+                value={profile.lastName || ""}
                 onChange={(e) =>
                   setProfile({ ...profile, lastName: e.target.value })
                 }
@@ -107,7 +119,7 @@ export default function Profile() {
           <Form.Label>Date of Birth</Form.Label>
           <Form.Control
             type="date"
-            value={profile.dob}
+            value={profile.dob || ""}
             onChange={(e) => setProfile({ ...profile, dob: e.target.value })}
           />
         </Form.Group>
@@ -116,7 +128,7 @@ export default function Profile() {
           <Form.Label>Email</Form.Label>
           <Form.Control
             type="email"
-            value={profile.email}
+            value={profile.email || ""}
             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
           />
         </Form.Group>
@@ -124,7 +136,7 @@ export default function Profile() {
         <Form.Group className="mb-4">
           <Form.Label>Role</Form.Label>
           <Form.Select
-            value={profile.role}
+            value={profile.role || "USER"}
             onChange={(e) =>
               setProfile({
                 ...profile,
@@ -140,8 +152,12 @@ export default function Profile() {
         </Form.Group>
 
         <div className="d-flex justify-content-end">
-          <Button variant="secondary" className="me-2 px-4">
-            Cancel
+          <Button
+            variant="primary"
+            className="me-2 px-4"
+            onClick={updateProfile}
+          >
+            Update
           </Button>
           <Button variant="danger" className="px-4" onClick={signout}>
             Sign out
