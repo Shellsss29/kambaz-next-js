@@ -20,6 +20,7 @@ export default function Signin() {
       const user = await client.signin(credentials);
       if (!user) return;
       dispatch(setCurrentUser(user));
+      console.log("Signed in user:", user);
       router.push("/Dashboard");
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };

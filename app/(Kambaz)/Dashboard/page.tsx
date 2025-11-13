@@ -54,7 +54,7 @@ export default function Dashboard() {
 
   const fetchCourses = async () => {
     try {
-      const fetchedCourses = await courseClient.fetchAllCourses();
+      const fetchedCourses = await courseClient.findMyCourses();
 
       const normalized = fetchedCourses.map((c) => ({
         _id: c._id ?? "",
@@ -67,7 +67,7 @@ export default function Dashboard() {
         credits: typeof c.credits === "number" ? c.credits : 0,
         image: c.image ?? "/images/default.jpg",
       }));
-      dispatch(setCourses(normalized));
+      dispatch(setCourses(fetchedCourses));
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
