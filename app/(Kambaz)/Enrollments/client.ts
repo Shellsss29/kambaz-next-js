@@ -4,6 +4,7 @@ const axiosWithCredentials = axios.create({ withCredentials: true });
 
 const HTTP_SERVER =
   process.env.NEXT_PUBLIC_HTTP_SERVER || "http://localhost:4000";
+
 const ENROLLMENTS_API = `${HTTP_SERVER}/api/enrollments`;
 const COURSES_API = `${HTTP_SERVER}/api/courses`;
 
@@ -19,6 +20,16 @@ export const enrollInCourse = async (courseId: string) => {
   return data;
 };
 
+export const enrollStudentInCourse = async (
+  courseId: string,
+  userId: string
+) => {
+  const resp = await axiosWithCredentials.post(
+    `${HTTP_SERVER}/api/enrollments/${courseId}/${userId}`
+  );
+  return resp.data;
+};
+
 export const unenrollFromCourse = async (courseId: string) => {
   const { data } = await axiosWithCredentials.delete(
     `${ENROLLMENTS_API}/${courseId}`
@@ -31,4 +42,13 @@ export const findUsersForCourse = async (courseId: string) => {
     `${COURSES_API}/${courseId}/users`
   );
   return data;
+};
+
+export const removeUserFromCourse = async (
+  courseId: string,
+  userId: string
+) => {
+  await axiosWithCredentials.delete(
+    `${ENROLLMENTS_API}/${courseId}/users/${userId}`
+  );
 };

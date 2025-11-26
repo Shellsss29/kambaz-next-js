@@ -1,20 +1,41 @@
 import axios from "axios";
-
+import { User } from "../types/User";
 const axiosWithCredentials = axios.create({ withCredentials: true });
 
 export const HTTP_SERVER = process.env.NEXT_PUBLIC_HTTP_SERVER;
 export const USERS_API = `${HTTP_SERVER}/api/users`;
 
+export const findAllUsers = async () => {
+  const response = await axiosWithCredentials.get(USERS_API);
+  return response.data;
+};
+
+export const findUsersByRole = async (role: string) => {
+  const response = await axiosWithCredentials.get(`${USERS_API}?role=${role}`);
+  return response.data;
+};
+
+export const findUsersByPartialName = async (name: string) => {
+  const response = await axiosWithCredentials.get(`${USERS_API}?name=${name}`);
+  return response.data;
+};
+
+export const findUserById = async (id: string) => {
+  const response = await axiosWithCredentials.get(`${USERS_API}/${id}`);
+  return response.data;
+};
+
+export const adminCreateUser = async (user: User) => {
+  const resp = await axiosWithCredentials.post(
+    `${USERS_API}/admin/create`,
+    user
+  );
+  return resp.data;
+};
+
 export interface Credentials {
   username: string;
   password: string;
-}
-
-export interface User {
-  _id?: string;
-  username: string;
-  password: string;
-  [key: string]: unknown;
 }
 
 export const signin = async (credentials: Credentials) => {
@@ -37,7 +58,7 @@ export const profile = async () => {
 
 export const signout = async () => {
   const response = await axiosWithCredentials.post(`${USERS_API}/signout`);
-  return response.data as { message: string };
+  return response.data;
 };
 
 export const updateUser = async (user: User) => {
@@ -46,4 +67,14 @@ export const updateUser = async (user: User) => {
     user
   );
   return response.data as User;
+};
+
+export const deleteUser = async (id: string) => {
+  const response = await axiosWithCredentials.delete(`${USERS_API}/${id}`);
+  return response.data;
+};
+
+export const createUser = async (user: User) => {
+  const response = await axiosWithCredentials.post(USERS_API, user);
+  return response.data;
 };

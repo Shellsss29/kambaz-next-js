@@ -23,11 +23,11 @@ export default function CourseNavigation() {
       {links.map((link) => {
         const href =
           link === "People"
-            ? `/Courses/${cid}/People/Table`
+            ? `/Courses/${cid}/People`
             : `/Courses/${cid}/${link}`;
         const isActive =
           pathname.includes(`/${link}`) ||
-          (link === "People" && pathname.includes("/People/Table"));
+          (link === "People" && pathname.includes("/People"));
 
         return (
           <Link

@@ -1,23 +1,25 @@
 "use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { Button, Form, Container, Row, Col } from "react-bootstrap";
 import { setCurrentUser } from "../reducer";
+import AccountNavigation from "../Navigation";
 import * as client from "../client";
 import type { RootState, AppDispatch } from "../../store";
 
 interface UserProfile {
   _id?: string;
   username: string;
-  password: string;
+  password?: string;
   firstName?: string;
   lastName?: string;
   dob?: string;
   email?: string;
-  role?: "USER" | "ADMIN" | "FACULTY" | "STUDENT";
-  [key: string]: unknown; // 👈 add this line
+  role?: "USER" | "ADMIN" | "FACULTY" | "STUDENT" | "TA";
 }
+
 
 export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
@@ -66,6 +68,10 @@ export default function Profile() {
       className="p-4"
       style={{ paddingLeft: "150px", paddingTop: "30px", maxWidth: "800px" }}
     >
+      <div className="mb-4">
+        <AccountNavigation />
+      </div>
+
       <h3 className="text-danger mb-4 fw-bold">Profile</h3>
 
       <Form>
@@ -152,11 +158,7 @@ export default function Profile() {
         </Form.Group>
 
         <div className="d-flex justify-content-end">
-          <Button
-            variant="primary"
-            className="me-2 px-4"
-            onClick={updateProfile}
-          >
+          <Button variant="primary" className="me-2 px-4" onClick={updateProfile}>
             Update
           </Button>
           <Button variant="danger" className="px-4" onClick={signout}>

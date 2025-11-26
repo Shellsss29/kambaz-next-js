@@ -57,6 +57,10 @@ export default function CoursesLayout({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (enrolled === undefined || enrolled === null) {
+      return;
+    }
+
     const isFaculty = currentUser.role === "FACULTY";
     const isEnrolled =
       Array.isArray(enrolled) && enrolled.includes(cid as string);

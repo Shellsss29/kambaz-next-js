@@ -17,7 +17,8 @@ body * {
 #wd-courses-navigation,
 #wd-signin-screen,
 #wd-signup-screen,
-#wd-profile-screen {
+#wd-profile-screen,
+#wd-users-page {
   margin-left: 120px;
   padding: 20px;
 }
@@ -32,7 +33,8 @@ body * {
   #wd-courses-navigation,
   #wd-signin-screen,
   #wd-signup-screen,
-  #wd-profile-screen {
+  #wd-profile-screen,
+  #wd-users-page {
     margin-left: 0px;
     padding: 10px;
   }
