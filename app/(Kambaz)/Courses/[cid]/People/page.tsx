@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import PeopleTable from "./Table";
 import PeopleDetails from "./Details";
@@ -12,14 +12,14 @@ export default function PeoplePage() {
     const [users, setUsers] = useState<User[]>([]);
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
-    const fetchPeople = async () => {
+    const fetchPeople = useCallback(async () => {
         const data = await enrollClient.findUsersForCourse(cid as string);
         setUsers(data);
-    };
+    }, [cid]);
 
     useEffect(() => {
         fetchPeople();
-    }, [cid]);
+    }, [fetchPeople]);
 
     return (
         <div className="p-3">
@@ -34,7 +34,7 @@ export default function PeoplePage() {
                 <PeopleDetails
                     uid={selectedUser}
                     onClose={() => setSelectedUser(null)}
-                    onUpdated={fetchPeople}   
+                    onUpdated={fetchPeople}
                 />
             )}
         </div>

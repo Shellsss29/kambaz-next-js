@@ -4,9 +4,19 @@ import { User } from "../../../types/User";
 interface PeopleTableProps {
   users: User[];
   onSelectUser: (uid: string) => void;
+  onDeleteUser?: (uid: string) => void;
+  isAdmin?: boolean;
 }
 
-export default function PeopleTable({ users, onSelectUser }: PeopleTableProps) {
+export default function PeopleTable({ users, onSelectUser, onDeleteUser, isAdmin = false }: PeopleTableProps) {
+  const handleDelete = (e: React.MouseEvent, uid: string) => {
+    e.stopPropagation();
+    const ok = confirm("Delete this user?");
+    if (ok && onDeleteUser) {
+      onDeleteUser(uid);
+    }
+  };
+
   return (
     <div id="wd-people-table">
       <table className="table table-hover">
@@ -15,6 +25,7 @@ export default function PeopleTable({ users, onSelectUser }: PeopleTableProps) {
             <th>Name</th>
             <th>Role</th>
             <th>Username</th>
+            {isAdmin && <th>Actions</th>}
           </tr>
         </thead>
 
@@ -31,6 +42,16 @@ export default function PeopleTable({ users, onSelectUser }: PeopleTableProps) {
               </td>
               <td>{user.role}</td>
               <td>{user.username}</td>
+              {isAdmin && (
+                <td>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={(e) => handleDelete(e, user._id!)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
