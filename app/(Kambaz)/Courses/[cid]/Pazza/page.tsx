@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store";
 import RequireLogin from "../../../requireLogin";
 import { PazzaClient } from "./client";
 import TiptapEditor from "./components/Editor/TipTapEditor";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 // ---------- Types ----------
 type PostType = "QUESTION" | "NOTE";
+type VisibilityScope = "CLASS" | "INDIVIDUAL";
 
 interface Post {
   _id: string;
@@ -23,6 +25,13 @@ interface Post {
   folders?: string[];
   createdAt?: string;
   viewsCount?: number;
+  // Optional: status or flags – Draft support could use this
+  status?: "PUBLISHED" | "DRAFT";
+}
+
+interface Folder {
+  _id: string;
+  name: string;
 }
 
 interface Answer {
@@ -52,19 +61,25 @@ interface Discussion {
   replies?: DiscussionReply[];
 }
 
-interface Folder {
-  _id: string;
-  name: string;
-}
-
-// ---------- Small helpers ----------
+// ---------- Helpers ----------
 const formatDateTime = (iso?: string) =>
   iso ? new Date(iso).toLocaleString() : "";
 
 const isInstructorRole = (role?: string | null) =>
   role === "FACULTY" || role === "TA" || role === "ADMIN";
 
-// ---------- AnswerCard (for both student & instructor answers) ----------
+const isEmptyRichText = (html: string | undefined | null) => {
+  if (!html) return true;
+  const trimmed = html.trim();
+  return (
+    trimmed === "" ||
+    trimmed === "<p></p>" ||
+    trimmed === "<p><br></p>" ||
+    trimmed === "<p>&nbsp;</p>"
+  );
+};
+
+// ---------- Answer Card ----------
 function AnswerCard({
   answer,
   currentUserId,
@@ -80,7 +95,6 @@ function AnswerCard({
 }) {
   const [editing, setEditing] = useState(false);
   const [body, setBody] = useState(answer.body);
-
   const showActions = canManage || currentUserId === answer.authorId;
 
   return (
@@ -124,7 +138,7 @@ function AnswerCard({
 
       {editing && (
         <div>
-          <TiptapEditor value={body} onChange={setBody} />
+          <TiptapEditor value={body} onChange={setBody} height="160px" />
           <div className="mt-2 d-flex gap-2">
             <button
               className="btn btn-sm btn-primary"
@@ -151,7 +165,7 @@ function AnswerCard({
   );
 }
 
-// ---------- ReplyCard ----------
+// ---------- Reply Card ----------
 function ReplyCard({
   reply,
   currentUserId,
@@ -210,7 +224,7 @@ function ReplyCard({
 
       {editing && (
         <div className="mt-1">
-          <TiptapEditor value={body} onChange={setBody} />
+          <TiptapEditor value={body} onChange={setBody} height="140px" />
           <div className="mt-2 d-flex gap-2">
             <button
               className="btn btn-sm btn-primary"
@@ -237,7 +251,7 @@ function ReplyCard({
   );
 }
 
-// ---------- DiscussionThread ----------
+// ---------- Discussion Thread ----------
 function DiscussionThread({
   discussion,
   currentUserId,
@@ -335,7 +349,11 @@ function DiscussionThread({
 
       {editing && (
         <div className="mb-2">
-          <TiptapEditor value={editBody} onChange={setEditBody} />
+          <TiptapEditor
+            value={editBody}
+            onChange={setEditBody}
+            height="180px"
+          />
           <div className="mt-2 d-flex gap-2">
             <button
               className="btn btn-sm btn-primary"
@@ -381,7 +399,7 @@ function DiscussionThread({
           <TiptapEditor
             value={replyBody}
             onChange={setReplyBody}
-            height="120px"
+            height="140px"
           />
           <button
             className="btn btn-sm btn-primary mt-2"
@@ -397,72 +415,91 @@ function DiscussionThread({
   );
 }
 
-// ---------- MAIN EXPORT ----------
-export default function PiazzaPage() {
+// ---------- Exported Page ----------
+export default function PazzaPage() {
   return (
     <RequireLogin>
-      <PiazzaPageInternal />
+      <PazzaPageInternal />
     </RequireLogin>
   );
 }
 
-// ---------- Internal page ----------
-function PiazzaPageInternal() {
+// ---------- Main Internal Component ----------
+function PazzaPageInternal() {
   const { cid } = useParams();
   const router = useRouter();
+
   const currentUser = useSelector(
     (state: RootState) => state.accountReducer.currentUser
   );
 
-  // folders / posts
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [search, setSearch] = useState("");
 
-  // layout
   const [showSidebar, setShowSidebar] = useState(true);
   const [mode, setMode] = useState<"glance" | "view" | "new">("glance");
 
-  // new post state
+  const [search, setSearch] = useState("");
+  const [folderFilter, setFolderFilter] = useState<string | null>("LIVE"); // LIVE, DRAFTS, or folder name/null
+
+  // New Post state
   const [postType, setPostType] = useState<PostType>("QUESTION");
-  const [postScope, setPostScope] = useState<"CLASS" | "INDIVIDUAL">("CLASS");
+  const [postScope, setPostScope] = useState<VisibilityScope>("CLASS");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [newPostFolders, setNewPostFolders] = useState<string[]>([]);
   const [newSummary, setNewSummary] = useState("");
   const [newDetails, setNewDetails] = useState("");
   const [newErrors, setNewErrors] = useState<Record<string, string>>({});
 
-  // answers & discussions
+  // Answers & discussions state
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [studentAnswerBody, setStudentAnswerBody] = useState("");
   const [instructorAnswerBody, setInstructorAnswerBody] = useState("");
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [newDiscussionText, setNewDiscussionText] = useState("");
 
-  // post editing
+  // Post editing
   const [editingPost, setEditingPost] = useState(false);
   const [editSummary, setEditSummary] = useState("");
   const [editDetails, setEditDetails] = useState("");
 
-  // ----- Loaders -----
+  // ---- Load folders once ----
   useEffect(() => {
     PazzaClient.getFolders(cid as string)
       .then(setFolders)
       .catch(console.error);
   }, [cid]);
 
+  // ---- Load posts ----
   const loadPosts = useCallback(() => {
+    // Only real folder names should be passed to the backend
+    const folderParam =
+      folderFilter &&
+      folderFilter !== "LIVE" &&
+      folderFilter !== "DRAFTS" &&
+      folderFilter.trim() !== ""
+        ? folderFilter
+        : undefined;
+
     PazzaClient.getPosts(
       cid as string,
-      selectedFolder || undefined,
-      search || undefined
+      folderParam,
+      search.trim() ? search : undefined
     )
       .then((data: Post[]) => {
-        setPosts(data);
+        let filtered = data;
+
+        if (folderFilter === "DRAFTS") {
+          filtered = data.filter(
+            (p) => p.status === "DRAFT" // backend can later add this flag
+          );
+        }
+
+        setPosts(filtered);
+
         if (selectedPost) {
-          const updated = data.find((p) => p._id === selectedPost._id);
+          const updated = filtered.find((p) => p._id === selectedPost._id);
           if (!updated) {
             setSelectedPost(null);
             setMode("glance");
@@ -472,12 +509,13 @@ function PiazzaPageInternal() {
         }
       })
       .catch(console.error);
-  }, [cid, selectedFolder, search, selectedPost]);
+  }, [cid, folderFilter, search, selectedPost]);
 
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
 
+  // ---- Load answers & discussions ----
   const loadAnswers = useCallback((postId?: string) => {
     if (!postId) return setAnswers([]);
     PazzaClient.getAnswers(postId).then(setAnswers).catch(console.error);
@@ -499,7 +537,7 @@ function PiazzaPageInternal() {
     }
   }, [selectedPost, loadAnswers, loadDiscussions]);
 
-  // ----- Group posts like Piazza -----
+  // ---- Group posts: Today / Yesterday / Week range ----
   const groupedPosts = useMemo(() => {
     const result: Record<string, Post[]> = {};
     const now = new Date();
@@ -522,8 +560,8 @@ function PiazzaPageInternal() {
         (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
       );
       let key: string;
-      if (diffDays === 0) key = "TODAY";
-      else if (diffDays === 1) key = "YESTERDAY";
+      if (diffDays === 0) key = "Today";
+      else if (diffDays === 1) key = "Yesterday";
       else key = weekLabel(created);
       if (!result[key]) result[key] = [];
       result[key].push(p);
@@ -539,9 +577,8 @@ function PiazzaPageInternal() {
     return result;
   }, [posts]);
 
-  // Guard MUST be after all hooks
   if (!currentUser) {
-    // RequireLogin should handle this, but TS needs a guard
+    // RequireLogin will handle redirect, this just satisfies TS/React
     return null;
   }
 
@@ -549,7 +586,7 @@ function PiazzaPageInternal() {
   const isInstructor = isInstructorRole(role);
   const isStudent = role === "STUDENT";
 
-  // ----- New Post helpers -----
+  // ---- New Post helpers ----
   const toggleNewPostFolder = (name: string) => {
     setNewPostFolders((prev) =>
       prev.includes(name) ? prev.filter((f) => f !== name) : [...prev, name]
@@ -561,13 +598,7 @@ function PiazzaPageInternal() {
     if (!newSummary.trim()) errs.summary = "Summary is required";
     if (newSummary.length > 100)
       errs.summary = "Summary must be at most 100 characters";
-    if (
-      !newDetails ||
-      newDetails.trim() === "" ||
-      newDetails === "<p></p>" ||
-      newDetails === "<p><br></p>"
-    )
-      errs.details = "Details are required";
+    if (isEmptyRichText(newDetails)) errs.details = "Details are required";
     if (newPostFolders.length === 0)
       errs.folders = "Select at least one folder";
     setNewErrors(errs);
@@ -598,18 +629,13 @@ function PiazzaPageInternal() {
     loadPosts();
   };
 
-  // ----- Answers -----
+  // ---- Answers helpers ----
   const studentAnswers = answers.filter((a) => a.role === "STUDENT");
   const instructorAnswers = answers.filter((a) => a.role === "INSTRUCTOR");
 
   const submitStudentAnswer = async () => {
     if (!isStudent || !selectedPost) return;
-    if (
-      !studentAnswerBody ||
-      studentAnswerBody === "<p></p>" ||
-      studentAnswerBody === "<p><br></p>"
-    )
-      return;
+    if (isEmptyRichText(studentAnswerBody)) return;
 
     await PazzaClient.createAnswer(selectedPost._id, {
       author: currentUser._id,
@@ -623,12 +649,7 @@ function PiazzaPageInternal() {
 
   const submitInstructorAnswer = async () => {
     if (!isInstructor || !selectedPost) return;
-    if (
-      !instructorAnswerBody ||
-      instructorAnswerBody === "<p></p>" ||
-      instructorAnswerBody === "<p><br></p>"
-    )
-      return;
+    if (isEmptyRichText(instructorAnswerBody)) return;
 
     await PazzaClient.createAnswer(selectedPost._id, {
       author: currentUser._id,
@@ -650,15 +671,10 @@ function PiazzaPageInternal() {
     if (selectedPost) loadAnswers(selectedPost._id);
   };
 
-  // ----- Discussions -----
+  // ---- Discussions helpers ----
   const submitDiscussion = async () => {
     if (!selectedPost) return;
-    if (
-      !newDiscussionText ||
-      newDiscussionText === "<p></p>" ||
-      newDiscussionText === "<p><br></p>"
-    )
-      return;
+    if (isEmptyRichText(newDiscussionText)) return;
 
     await PazzaClient.createDiscussion(selectedPost._id, {
       author: currentUser._id,
@@ -675,8 +691,7 @@ function PiazzaPageInternal() {
     body: string,
     cb: () => void
   ) => {
-    if (!body || body === "<p></p>" || body === "<p><br></p>" || !selectedPost)
-      return;
+    if (isEmptyRichText(body) || !selectedPost) return;
     await PazzaClient.addReply(discussionId, {
       author: currentUser._id,
       body,
@@ -714,7 +729,7 @@ function PiazzaPageInternal() {
     if (selectedPost) loadDiscussions(selectedPost._id);
   };
 
-  // ----- Post editing -----
+  // ---- Post editing ----
   const canEditPost =
     selectedPost && (isInstructor || currentUser._id === selectedPost.authorId);
 
@@ -728,12 +743,15 @@ function PiazzaPageInternal() {
     loadPosts();
   };
 
+  // ---- Stats for Class at a Glance ----
   const totalPosts = posts.length;
   const totalStudentResponses = studentAnswers.length;
   const totalInstructorResponses = instructorAnswers.length;
 
+  // ---------- Render ----------
   return (
-    <div className="d-flex flex-column h-100" style={{ minHeight: "0" }}>
+    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
+      {/* Top Pazza Navigation Bar (PNB) */}
       <div
         className="d-flex align-items-center px-3 py-2 text-white"
         style={{ backgroundColor: "#476b87" }}
@@ -773,33 +791,49 @@ function PiazzaPageInternal() {
         </div>
       </div>
 
+      {/* Folder Filters row (FF) */}
       <div className="d-flex align-items-center px-3 py-1 border-bottom bg-light small">
-        <div
-          className="d-flex align-items-center me-3"
-          style={{ cursor: "pointer" }}
+        <button
+          type="button"
+          className={
+            "btn btn-sm me-2 " +
+            (folderFilter === "LIVE"
+              ? "btn-primary text-white"
+              : "btn-outline-secondary")
+          }
+          style={{ fontSize: "0.75rem" }}
+          onClick={() => setFolderFilter("LIVE")}
         >
-          <span>LIVE Q&amp;A</span>
-        </div>
+          LIVE Q&amp;A
+        </button>
 
-        <div
-          className="d-flex align-items-center me-3"
-          style={{ cursor: "pointer" }}
+        <button
+          type="button"
+          className={
+            "btn btn-sm me-3 " +
+            (folderFilter === "DRAFTS"
+              ? "btn-primary text-white"
+              : "btn-outline-secondary")
+          }
+          style={{ fontSize: "0.75rem" }}
+          onClick={() => setFolderFilter("DRAFTS")}
         >
-          <span>Drafts</span>
-        </div>
+          Drafts
+        </button>
+
         {folders.map((f) => (
           <button
             key={f._id}
             type="button"
             className={
               "btn btn-sm me-1 px-2 py-0 " +
-              (selectedFolder === f.name
+              (folderFilter === f.name
                 ? "btn-primary text-white"
                 : "btn-outline-secondary")
             }
             style={{ fontSize: "0.75rem" }}
             onClick={() =>
-              setSelectedFolder((prev) => (prev === f.name ? null : f.name))
+              setFolderFilter((prev) => (prev === f.name ? "LIVE" : f.name))
             }
           >
             {f.name}
@@ -807,13 +841,14 @@ function PiazzaPageInternal() {
         ))}
       </div>
 
+      {/* Two-column layout: Posts Sidebar + Post Screen */}
       <div className="d-flex flex-grow-1" style={{ minHeight: 0 }}>
+        {/* Left: Posts Sidebar (LOP) */}
         {showSidebar && (
           <div
             className="border-end bg-white"
             style={{ width: 320, minWidth: 260, overflowY: "auto" }}
           >
-            ={" "}
             <div className="p-2 border-bottom bg-white small">
               <div className="d-flex align-items-center mb-1">
                 <button
@@ -842,6 +877,7 @@ function PiazzaPageInternal() {
                 />
               </div>
             </div>
+
             <div className="p-2 small">
               {Object.entries(groupedPosts).map(([label, list]) => (
                 <div key={label} className="mb-3">
@@ -896,6 +932,7 @@ function PiazzaPageInternal() {
           </div>
         )}
 
+        {/* Sidebar toggle when hidden */}
         {!showSidebar && (
           <div className="border-end bg-light d-flex align-items-start">
             <button
@@ -908,8 +945,10 @@ function PiazzaPageInternal() {
           </div>
         )}
 
+        {/* Right: Post Screen (Class at a Glance / New Post / View Post) */}
         <div className="flex-grow-1 d-flex flex-column" style={{ minWidth: 0 }}>
           <div className="p-3" style={{ overflowY: "auto" }}>
+            {/* Class at a Glance (CGS) */}
             {mode === "glance" && !selectedPost && (
               <div className="border rounded p-3 mb-3 bg-white small">
                 <h5 className="mb-3">Class at a Glance</h5>
@@ -932,8 +971,10 @@ function PiazzaPageInternal() {
               </div>
             )}
 
+            {/* New Post Screen (NPS) */}
             {mode === "new" && (
               <div className="border rounded bg-white p-3 small">
+                {/* Post type tabs */}
                 <div className="mb-3">
                   <div className="btn-group btn-group-sm">
                     <button
@@ -970,6 +1011,7 @@ function PiazzaPageInternal() {
                   </div>
                 </div>
 
+                {/* Post To */}
                 <div className="mb-3">
                   <label className="form-label d-block mb-1 small">
                     Post To
@@ -1025,6 +1067,7 @@ function PiazzaPageInternal() {
                   )}
                 </div>
 
+                {/* Select Folders */}
                 <div className="mb-3">
                   <label className="form-label small d-block mb-1">
                     Select Folder(s)*
@@ -1057,6 +1100,7 @@ function PiazzaPageInternal() {
                   </div>
                 </div>
 
+                {/* Summary */}
                 <div className="mb-3">
                   <label className="form-label small mb-1">Summary*</label>
                   <input
@@ -1071,6 +1115,7 @@ function PiazzaPageInternal() {
                   )}
                 </div>
 
+                {/* Details */}
                 <div className="mb-3">
                   <label className="form-label small mb-1">Details*</label>
                   <TiptapEditor
@@ -1085,6 +1130,7 @@ function PiazzaPageInternal() {
                   )}
                 </div>
 
+                {/* Buttons */}
                 <div className="d-flex justify-content-end gap-2">
                   <button
                     type="button"
@@ -1107,8 +1153,10 @@ function PiazzaPageInternal() {
               </div>
             )}
 
+            {/* View Post Screen (PS) */}
             {mode === "view" && selectedPost && (
               <div className="small">
+                {/* Post header */}
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <div>
                     <span className="badge bg-danger me-2">
@@ -1170,6 +1218,7 @@ function PiazzaPageInternal() {
                   Created by {selectedPost.author || "Unknown"}
                 </div>
 
+                {/* Post details */}
                 {!editingPost && (
                   <div
                     className="border rounded p-3 bg-white mb-3"
@@ -1177,6 +1226,7 @@ function PiazzaPageInternal() {
                   />
                 )}
 
+                {/* Edit post form */}
                 {editingPost && (
                   <div className="border rounded p-3 bg-white mb-3 small">
                     <div className="mb-2">
@@ -1218,6 +1268,7 @@ function PiazzaPageInternal() {
                   </div>
                 )}
 
+                {/* Student Answers */}
                 <section className="mb-4">
                   <div className="border-bottom pb-1 mb-2">
                     <span className="text-uppercase text-muted">
@@ -1261,6 +1312,7 @@ function PiazzaPageInternal() {
                   )}
                 </section>
 
+                {/* Instructor Answers */}
                 <section className="mb-4">
                   <div className="border-bottom pb-1 mb-2">
                     <span className="text-uppercase text-muted">
@@ -1304,6 +1356,7 @@ function PiazzaPageInternal() {
                   )}
                 </section>
 
+                {/* Follow-up Discussion (FUD) */}
                 <section>
                   <div className="border-bottom pb-1 mb-2">
                     <span className="text-uppercase text-muted">
@@ -1311,6 +1364,7 @@ function PiazzaPageInternal() {
                     </span>
                   </div>
 
+                  {/* Start new discussion */}
                   <TiptapEditor
                     value={newDiscussionText}
                     onChange={setNewDiscussionText}
@@ -1324,6 +1378,7 @@ function PiazzaPageInternal() {
                     Start Follow-up
                   </button>
 
+                  {/* Existing discussions */}
                   {discussions.map((d) => (
                     <DiscussionThread
                       key={d._id}
