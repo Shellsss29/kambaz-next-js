@@ -1,7 +1,3 @@
-import axios from "axios";
-
-const axiosWithCredentials = axios.create({ withCredentials: true });
-
 const HTTP_SERVER =
   process.env.NEXT_PUBLIC_HTTP_SERVER || "http://localhost:4000";
 
@@ -9,46 +5,55 @@ const ENROLLMENTS_API = `${HTTP_SERVER}/api/enrollments`;
 const COURSES_API = `${HTTP_SERVER}/api/courses`;
 
 export const findMyEnrollments = async () => {
-  const { data } = await axiosWithCredentials.get(`${ENROLLMENTS_API}/current`);
-  return data;
+  const response = await fetch(`${ENROLLMENTS_API}/current`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const enrollInCourse = async (courseId: string) => {
-  const { data } = await axiosWithCredentials.post(
-    `${ENROLLMENTS_API}/${courseId}`
-  );
-  return data;
+  const response = await fetch(`${ENROLLMENTS_API}/${courseId}`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const enrollStudentInCourse = async (
   courseId: string,
   userId: string
 ) => {
-  const resp = await axiosWithCredentials.post(
-    `${HTTP_SERVER}/api/enrollments/${courseId}/${userId}`
+  const resp = await fetch(
+    `${HTTP_SERVER}/api/enrollments/${courseId}/${userId}`,
+    {
+      method: "POST",
+      credentials: "include",
+    }
   );
-  return resp.data;
+  return resp.json();
 };
 
 export const unenrollFromCourse = async (courseId: string) => {
-  const { data } = await axiosWithCredentials.delete(
-    `${ENROLLMENTS_API}/${courseId}`
-  );
-  return data;
+  const response = await fetch(`${ENROLLMENTS_API}/${courseId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const findUsersForCourse = async (courseId: string) => {
-  const { data } = await axiosWithCredentials.get(
-    `${COURSES_API}/${courseId}/users`
-  );
-  return data;
+  const response = await fetch(`${COURSES_API}/${courseId}/users`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const removeUserFromCourse = async (
   courseId: string,
   userId: string
 ) => {
-  await axiosWithCredentials.delete(
-    `${ENROLLMENTS_API}/${courseId}/users/${userId}`
-  );
+  await fetch(`${ENROLLMENTS_API}/${courseId}/users/${userId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 };

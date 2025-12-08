@@ -1,36 +1,42 @@
-import axios from "axios";
 import { User } from "../types/User";
-const axiosWithCredentials = axios.create({ withCredentials: true });
 
 export const HTTP_SERVER = process.env.NEXT_PUBLIC_HTTP_SERVER;
 export const USERS_API = `${HTTP_SERVER}/api/users`;
 
 export const findAllUsers = async () => {
-  const response = await axiosWithCredentials.get(USERS_API);
-  return response.data;
+  const response = await fetch(USERS_API, { credentials: "include" });
+  return response.json();
 };
 
 export const findUsersByRole = async (role: string) => {
-  const response = await axiosWithCredentials.get(`${USERS_API}?role=${role}`);
-  return response.data;
+  const response = await fetch(`${USERS_API}?role=${role}`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const findUsersByPartialName = async (name: string) => {
-  const response = await axiosWithCredentials.get(`${USERS_API}?name=${name}`);
-  return response.data;
+  const response = await fetch(`${USERS_API}?name=${name}`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const findUserById = async (id: string) => {
-  const response = await axiosWithCredentials.get(`${USERS_API}/${id}`);
-  return response.data;
+  const response = await fetch(`${USERS_API}/${id}`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const adminCreateUser = async (user: User) => {
-  const resp = await axiosWithCredentials.post(
-    `${USERS_API}/admin/create`,
-    user
-  );
-  return resp.data;
+  const resp = await fetch(`${USERS_API}/admin/create`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(user),
+  });
+  return resp.json();
 };
 
 export interface Credentials {
@@ -39,42 +45,65 @@ export interface Credentials {
 }
 
 export const signin = async (credentials: Credentials) => {
-  const response = await axiosWithCredentials.post(
-    `${USERS_API}/signin`,
-    credentials
-  );
-  return response.data as User;
+  const response = await fetch(`${USERS_API}/signin`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(credentials),
+  });
+  return response.json() as Promise<User>;
 };
 
 export const signup = async (user: User) => {
-  const response = await axiosWithCredentials.post(`${USERS_API}/signup`, user);
-  return response.data as User;
+  const response = await fetch(`${USERS_API}/signup`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(user),
+  });
+  return response.json() as Promise<User>;
 };
 
 export const profile = async () => {
-  const response = await axiosWithCredentials.post(`${USERS_API}/profile`);
-  return response.data as User;
+  const response = await fetch(`${USERS_API}/profile`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return response.json() as Promise<User>;
 };
 
 export const signout = async () => {
-  const response = await axiosWithCredentials.post(`${USERS_API}/signout`);
-  return response.data;
+  const response = await fetch(`${USERS_API}/signout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const updateUser = async (user: User) => {
-  const response = await axiosWithCredentials.put(
-    `${USERS_API}/${user._id}`,
-    user
-  );
-  return response.data as User;
+  const response = await fetch(`${USERS_API}/${user._id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(user),
+  });
+  return response.json() as Promise<User>;
 };
 
 export const deleteUser = async (id: string) => {
-  const response = await axiosWithCredentials.delete(`${USERS_API}/${id}`);
-  return response.data;
+  const response = await fetch(`${USERS_API}/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const createUser = async (user: User) => {
-  const response = await axiosWithCredentials.post(USERS_API, user);
-  return response.data;
+  const response = await fetch(USERS_API, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(user),
+  });
+  return response.json();
 };

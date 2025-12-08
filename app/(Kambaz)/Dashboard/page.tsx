@@ -19,6 +19,7 @@ import { setCourses } from "../Courses/reducer";
 import type { RootState, AppDispatch } from "../store";
 import * as courseClient from "../Courses/client";
 import * as enrollClient from "../Enrollments/client";
+import RequireLogin from "../requireLogin";
 
 interface User {
   _id: string;
@@ -144,153 +145,155 @@ export default function Dashboard() {
   const handleEdit = (selectedCourse: Course) => setCourse(selectedCourse);
 
   return (
-    <div id="wd-dashboard" className="p-3">
-      <div className="d-flex justify-content-between align-items-center">
-        <h1 id="wd-dashboard-title">Dashboard</h1>
+    <RequireLogin>
+      <div id="wd-dashboard" className="p-3">
+        <div className="d-flex justify-content-between align-items-center">
+          <h1 id="wd-dashboard-title">Dashboard</h1>
+        </div>
+        <hr />
+
+        {currentUser?.role === "FACULTY" && (
+          <>
+            <h5>
+              New / Edit Course
+              <Button
+                variant="primary"
+                className="float-end ms-2"
+                id="wd-add-new-course-click"
+                onClick={onAddNewCourse}
+              >
+                Add
+              </Button>
+              <Button
+                variant="warning"
+                className="float-end me-2"
+                id="wd-update-course-click"
+                onClick={onUpdateCourse}
+              >
+                Update
+              </Button>
+            </h5>
+            <br />
+            <FormControl
+              className="mb-2"
+              placeholder="Course Name"
+              value={course.name}
+              onChange={(e) => setCourse({ ...course, name: e.target.value })}
+            />
+            <FormControl
+              className="mb-2"
+              as="textarea"
+              rows={3}
+              placeholder="Description"
+              value={course.description}
+              onChange={(e) =>
+                setCourse({ ...course, description: e.target.value })
+              }
+            />
+            <hr />
+          </>
+        )}
+
+        <h2 id="wd-dashboard-published">Courses ({courses.length})</h2>
+        <hr />
+
+        <Row xs={1} md={5} className="g-4">
+          {courses.map((c) => {
+            const isEnrolled = enrolled.includes(c._id ?? "");
+
+            return (
+              <Col key={c._id} style={{ width: "300px" }}>
+                <Card>
+                  <Link
+                    href={isEnrolled ? `/Courses/${c._id}/Home` : `/Dashboard`}
+                    className="text-decoration-none text-dark"
+                  >
+                    <CardImg
+                      variant="top"
+                      style={{
+                        backgroundColor: "#a73f28ff",
+                        width: "100%",
+                        height: "160px",
+                      }}
+                      src={c.image || "/images/reactjs.jpg"}
+                    />
+                    <CardBody>
+                      <CardTitle className="text-nowrap overflow-hidden">
+                        {c.name}
+                      </CardTitle>
+                      <CardText
+                        className="overflow-hidden"
+                        style={{ height: "100px" }}
+                      >
+                        {c.description}
+                      </CardText>
+
+                      <div className="d-flex justify-content-between align-items-center">
+                        {currentUser?.role === "FACULTY" ? (
+                          <>
+                            <Button
+                              variant="warning"
+                              size="sm"
+                              id="wd-edit-course-click"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleEdit(c);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              id="wd-delete-course-click"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                onDeleteCourse(c._id ?? "");
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            {isEnrolled ? (
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleUnenroll(c._id ?? "");
+                                }}
+                              >
+                                Unenroll
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleEnroll(c._id ?? "");
+                                }}
+                              >
+                                Enroll
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </CardBody>
+                  </Link>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+
+        {courses.length === 0 && (
+          <p className="text-muted mt-3">No courses available.</p>
+        )}
       </div>
-      <hr />
-
-      {currentUser?.role === "FACULTY" && (
-        <>
-          <h5>
-            New / Edit Course
-            <Button
-              variant="primary"
-              className="float-end ms-2"
-              id="wd-add-new-course-click"
-              onClick={onAddNewCourse}
-            >
-              Add
-            </Button>
-            <Button
-              variant="warning"
-              className="float-end me-2"
-              id="wd-update-course-click"
-              onClick={onUpdateCourse}
-            >
-              Update
-            </Button>
-          </h5>
-          <br />
-          <FormControl
-            className="mb-2"
-            placeholder="Course Name"
-            value={course.name}
-            onChange={(e) => setCourse({ ...course, name: e.target.value })}
-          />
-          <FormControl
-            className="mb-2"
-            as="textarea"
-            rows={3}
-            placeholder="Description"
-            value={course.description}
-            onChange={(e) =>
-              setCourse({ ...course, description: e.target.value })
-            }
-          />
-          <hr />
-        </>
-      )}
-
-      <h2 id="wd-dashboard-published">Courses ({courses.length})</h2>
-      <hr />
-
-      <Row xs={1} md={5} className="g-4">
-        {courses.map((c) => {
-          const isEnrolled = enrolled.includes(c._id ?? "");
-
-          return (
-            <Col key={c._id} style={{ width: "300px" }}>
-              <Card>
-                <Link
-                  href={isEnrolled ? `/Courses/${c._id}/Home` : `/Dashboard`}
-                  className="text-decoration-none text-dark"
-                >
-                  <CardImg
-                    variant="top"
-                    style={{
-                      backgroundColor: "#a73f28ff",
-                      width: "100%",
-                      height: "160px",
-                    }}
-                    src={c.image || "/images/reactjs.jpg"}
-                  />
-                  <CardBody>
-                    <CardTitle className="text-nowrap overflow-hidden">
-                      {c.name}
-                    </CardTitle>
-                    <CardText
-                      className="overflow-hidden"
-                      style={{ height: "100px" }}
-                    >
-                      {c.description}
-                    </CardText>
-
-                    <div className="d-flex justify-content-between align-items-center">
-                      {currentUser?.role === "FACULTY" ? (
-                        <>
-                          <Button
-                            variant="warning"
-                            size="sm"
-                            id="wd-edit-course-click"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleEdit(c);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            id="wd-delete-course-click"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              onDeleteCourse(c._id ?? "");
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          {isEnrolled ? (
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleUnenroll(c._id ?? "");
-                              }}
-                            >
-                              Unenroll
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="success"
-                              size="sm"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleEnroll(c._id ?? "");
-                              }}
-                            >
-                              Enroll
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </CardBody>
-                </Link>
-              </Card>
-            </Col>
-          );
-        })}
-      </Row>
-
-      {courses.length === 0 && (
-        <p className="text-muted mt-3">No courses available.</p>
-      )}
-    </div>
+    </RequireLogin>
   );
 }

@@ -1,6 +1,4 @@
-import axios from "axios";
 import type { Course } from "./types";
-const axiosWithCredentials = axios.create({ withCredentials: true });
 
 const HTTP_SERVER =
   process.env.NEXT_PUBLIC_HTTP_SERVER || "http://localhost:4000";
@@ -33,114 +31,129 @@ export interface Assignment {
 }
 
 export const fetchAllCourses = async (): Promise<Course[]> => {
-  const { data } = await axiosWithCredentials.get<Course[]>(COURSES_API);
-  return data;
+  const response = await fetch(COURSES_API, { credentials: "include" });
+  return response.json();
 };
 
 export const findMyCourses = async (): Promise<Course[]> => {
-  const { data } = await axiosWithCredentials.get<Course[]>(
-    `${USERS_API}/current/courses`
-  );
-  return data;
+  const response = await fetch(`${USERS_API}/current/courses`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const createCourse = async (course: Course): Promise<Course> => {
-  const { data } = await axiosWithCredentials.post<Course>(
-    `${USERS_API}/current/courses`,
-    course
-  );
-  return data;
+  const response = await fetch(`${USERS_API}/current/courses`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(course),
+  });
+  return response.json();
 };
 
 export const updateCourse = async (course: Course): Promise<Course> => {
-  const { data } = await axiosWithCredentials.put<Course>(
-    `${COURSES_API}/${course._id}`,
-    course
-  );
-  return data;
+  const response = await fetch(`${COURSES_API}/${course._id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(course),
+  });
+  return response.json();
 };
 
 export const deleteCourse = async (
   id: string
 ): Promise<{ message: string }> => {
-  const { data } = await axiosWithCredentials.delete<{ message: string }>(
-    `${COURSES_API}/${id}`
-  );
-  return data;
+  const response = await fetch(`${COURSES_API}/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const findModulesForCourse = async (
   courseId: string
 ): Promise<Module[]> => {
-  const { data } = await axiosWithCredentials.get<Module[]>(
-    `${COURSES_API}/${courseId}/modules`
-  );
-  return data;
+  const response = await fetch(`${COURSES_API}/${courseId}/modules`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const createModuleForCourse = async (
   courseId: string,
   module: Module
 ): Promise<Module> => {
-  const { data } = await axiosWithCredentials.post<Module>(
-    `${COURSES_API}/${courseId}/modules`,
-    module
-  );
-  return data;
+  const response = await fetch(`${COURSES_API}/${courseId}/modules`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(module),
+  });
+  return response.json();
 };
 
 export const deleteModule = async (
   moduleId: string
 ): Promise<{ message: string }> => {
-  const { data } = await axiosWithCredentials.delete<{ message: string }>(
-    `${MODULES_API}/${moduleId}`
-  );
-  return data;
+  const response = await fetch(`${MODULES_API}/${moduleId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const updateModule = async (module: Module): Promise<Module> => {
-  const { data } = await axiosWithCredentials.put<Module>(
-    `${MODULES_API}/${module._id}`,
-    module
-  );
-  return data;
+  const response = await fetch(`${MODULES_API}/${module._id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(module),
+  });
+  return response.json();
 };
 
 export const findAssignmentsForCourse = async (
   courseId: string
 ): Promise<Assignment[]> => {
-  const { data } = await axiosWithCredentials.get<Assignment[]>(
-    `${COURSES_API}/${courseId}/assignments`
-  );
-  return data;
+  const response = await fetch(`${COURSES_API}/${courseId}/assignments`, {
+    credentials: "include",
+  });
+  return response.json();
 };
 
 export const createAssignmentForCourse = async (
   courseId: string,
   assignment: Assignment
 ): Promise<Assignment> => {
-  const { data } = await axiosWithCredentials.post<Assignment>(
-    `${COURSES_API}/${courseId}/assignments`,
-    assignment
-  );
-  return data;
+  const response = await fetch(`${COURSES_API}/${courseId}/assignments`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(assignment),
+  });
+  return response.json();
 };
 
 export const updateAssignment = async (
   assignment: Assignment
 ): Promise<Assignment> => {
-  const { data } = await axiosWithCredentials.put<Assignment>(
-    `${ASSIGNMENTS_API}/${assignment._id}`,
-    assignment
-  );
-  return data;
+  const response = await fetch(`${ASSIGNMENTS_API}/${assignment._id}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(assignment),
+  });
+  return response.json();
 };
 
 export const deleteAssignment = async (
   assignmentId: string
 ): Promise<{ message: string }> => {
-  const { data } = await axiosWithCredentials.delete<{ message: string }>(
-    `${ASSIGNMENTS_API}/${assignmentId}`
-  );
-  return data;
+  const response = await fetch(`${ASSIGNMENTS_API}/${assignmentId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return response.json();
 };
